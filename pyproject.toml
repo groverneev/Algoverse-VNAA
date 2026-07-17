@@ -1,0 +1,27 @@
+[project]
+name = "vnaa"
+version = "0.1.0"
+description = "Probing evaluation awareness in realistic multi-turn conversations"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "torch>=2.4",
+    "transformers>=4.44",
+    "datasets>=2.20",
+    "scikit-learn>=1.5",
+    "numpy>=1.26",
+    "tqdm>=4.66",
+    "huggingface_hub>=0.24",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/vnaa"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
