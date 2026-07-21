@@ -54,6 +54,9 @@ def main() -> None:
     lm = load_model(args.model, device=args.device, dtype=dtype)
     print(f"model={args.model} device={lm.device} dtype={args.dtype} "
           f"n_layers={lm.n_layers} hidden={lm.hidden_size}")
+    if lm.device == "cpu" and lm.n_layers > 20:
+        print("WARNING: running a large model on CPU will be very slow. "
+              "Switch the machine to a GPU (e.g. Lightning L4) before this run.")
 
     acts = extract_activations(lm, data.conversations)  # (n, n_layers+1, hidden)
     assert np.isfinite(acts).all(), "non-finite activations"

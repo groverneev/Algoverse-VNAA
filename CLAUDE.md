@@ -4,7 +4,8 @@ This file is the detailed context for any agent picking up this project. Keep it
 updated as work progresses (see "Maintaining this file" at the bottom). The
 README is the short human-facing version; this is the long one.
 
-Last updated: July 2026, after slice 1 validated on Llama-3.2-1B.
+Last updated: July 2026. Slice 1 validated on Llama-3.2-1B; GPU setup for the
+8B run prepared (`scripts/setup_gpu.sh`), 8B run not yet done.
 
 ---
 
@@ -184,7 +185,12 @@ a length artifact" — NOT yet "genuine eval-awareness."
 
 1. **Run slice 1 on Llama-3.1-8B** (bf16) on a free 24 GB GPU. This is the
    headline replication number. 8B has 32 layers, so "early-to-middle" is a more
-   meaningful claim there.
+   meaningful claim there. Chosen host: Lightning AI single L4 (24 GB) — one card
+   fits 8B bf16, so our single-device code runs unchanged; Kaggle's 2×T4 would
+   force multi-GPU sharding. Setup is scripted: `scripts/setup_gpu.sh` (clone the
+   public repo on a Studio, run it, switch to the L4, run `vnaa.run_slice1`).
+   `setup_gpu.sh` installs on top of the Studio's CUDA torch (never reinstalls
+   torch). PyYAML is now an explicit dep (data.py needs it; was transitive).
 2. Add the rest of the surface-baseline hierarchy: formatting classifier,
    bag-of-words, style-matched control (random and length already understood).
    The probe-minus-baseline gap is the actual result.

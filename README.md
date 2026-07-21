@@ -89,6 +89,25 @@ zip in memory and never writes prompt text to disk. Do not commit SAD prompts.
 Output: a per-layer AUROC table (evaluation vs deployment), plus cached
 activations and the AUROC curve saved under `results/`.
 
+## Running on a cloud GPU (the 8B replication)
+
+The 8B does not fit on a 16 GB laptop, so the real run uses a ~24 GB GPU. On a
+Lightning AI Studio (single L4), from a terminal:
+
+```bash
+git clone https://github.com/groverneev/Algoverse-VNAA.git
+cd Algoverse-VNAA
+bash scripts/setup_gpu.sh      # installs deps, HF login, downloads SAD data
+# then switch the Studio to the L4 GPU and run:
+python -m vnaa.run_slice1 \
+  --sad-repo data/sad/oversight_structs.zip \
+  --model meta-llama/Llama-3.1-8B-Instruct --dtype bfloat16
+```
+
+`setup_gpu.sh` installs on top of the Studio's existing CUDA PyTorch (it does not
+reinstall torch, which could pull a CPU-only build). Do setup on the free CPU
+machine; only switch to the GPU for the model run.
+
 ## Tests
 
 ```bash
