@@ -7,3 +7,6 @@ __pycache__/
 # Cached activations and datasets are large and reproducible.
 data/
 results/
+
+# Reference PDFs (proposal, internal program docs) — kept local, not published.
+resources/
