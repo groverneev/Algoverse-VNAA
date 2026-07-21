@@ -63,15 +63,37 @@ def load_model(
     model_name: str,
     device: str | None = None,
     dtype: torch.dtype = torch.float32,
+    device_map: str | None = None,
 ) -> LoadedModel:
     """Load tokenizer and model for activation extraction.
 
     dtype defaults to float32 for faithful activations on CPU/MPS. On a CUDA box
     running the 8B, pass torch.bfloat16 to fit memory; that is a deliberate
     fidelity/size tradeoff, not the default.
+
+    device_map (e.g. "auto") shards the model across multiple GPUs via accelerate.
+    Needed when the model does not fit on one card — e.g. the 8B in bf16 (~16 GB)
+    across Kaggle's 2x T4 (16 GB each). When set, we do not call .to(); accelerate
+    places the layers, and inputs go to the embedding layer's device. When None,
+    the model loads on a single device as usual.
     """
-    device = pick_device(device)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
+    if device_map is not None:
+        model = AutoModelForCausalLM.from_pretrained(
+            model_name, dtype=dtype, device_map=device_map
+        )
+        model.eval()
+        # Inputs must land on whatever device holds the embedding layer.
+        input_device = str(model.get_input_embeddings().weight.device)
+        return LoadedModel(
+            tokenizer=tokenizer,
+            model=model,
+            device=input_device,
+            n_layers=model.config.num_hidden_layers,
+            hidden_size=model.config.hidden_size,
+        )
+
+    device = pick_device(device)
     model = AutoModelForCausalLM.from_pretrained(model_name, dtype=dtype)
     model.to(device)
     model.eval()

@@ -39,6 +39,8 @@ def main() -> None:
     ap.add_argument("--test-frac", type=float, default=0.3)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--device", default=None, help="cuda|mps|cpu (auto if unset)")
+    ap.add_argument("--device-map", default=None,
+                    help="shard across GPUs, e.g. 'auto' (needed for 8B on 2x T4)")
     ap.add_argument("--dtype", default="float32", choices=["float32", "bfloat16"])
     ap.add_argument("--out-dir", default="results")
     args = ap.parse_args()
@@ -51,7 +53,8 @@ def main() -> None:
     labels = np.array(data.labels)
     print(f"loaded {len(data)} conversations | counts: {data.counts()}")
 
-    lm = load_model(args.model, device=args.device, dtype=dtype)
+    lm = load_model(args.model, device=args.device, dtype=dtype,
+                    device_map=args.device_map)
     print(f"model={args.model} device={lm.device} dtype={args.dtype} "
           f"n_layers={lm.n_layers} hidden={lm.hidden_size}")
     if lm.device == "cpu" and lm.n_layers > 20:

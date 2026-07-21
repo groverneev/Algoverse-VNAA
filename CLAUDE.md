@@ -4,8 +4,16 @@ This file is the detailed context for any agent picking up this project. Keep it
 updated as work progresses (see "Maintaining this file" at the bottom). The
 README is the short human-facing version; this is the long one.
 
-Last updated: July 2026. Slice 1 validated on Llama-3.2-1B; GPU setup for the
-8B run prepared (`scripts/setup_gpu.sh`), 8B run not yet done.
+Last updated: July 2026. Slice 1 validated on Llama-3.2-1B; 8B run prepared for
+Kaggle (multi-GPU), not yet done.
+
+GPU host decision: tried Lightning AI first, abandoned it — the site 404'd on the
+Studio dashboard and the account showed 0.00 free credits (a `.org` school email,
+not `.edu`, likely got no free grant). Pivoted to **Kaggle** (2x T4, genuinely
+free, 30 GPU-hr/week). The 8B in bf16 (~16 GB) does not fit on one 16 GB T4, so it
+shards across both T4s with `--device-map auto` (needs `accelerate`). See
+`scripts/kaggle_slice1.md` for the exact notebook cells. `scripts/setup_gpu.sh`
+is the single-GPU path (kept for a future single-24GB-card host).
 
 ---
 
