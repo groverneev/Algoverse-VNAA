@@ -12,11 +12,14 @@ Chaudhary.
 
 ## Status
 
-Slice 1 (pipeline validation) is built and validated on a small model. The
-end-to-end path — load model, extract activations, train a per-layer
-difference-of-means probe, read out AUROC — works on real data. The headline
-replication number (on Llama-3.1-8B) has not been run yet. See `CLAUDE.md` for
-the full state.
+Slice 1 (the replication cell) is done. On Llama-3.1-8B, the eval-vs-deployment
+linear probe reaches AUROC 0.994 at layer 4 of 32, with the signal emerging in
+the first few layers and staying high — reproducing the prior single-turn
+result. The embedding layer is exactly chance, and a length-only baseline on the
+same prompts is 0.37, so the separation is not a length artifact. This validates
+the pipeline on the target model; it is not yet a claim of genuine
+eval-awareness (format/lexical baselines and the disguised multi-turn arms are
+next). See `CLAUDE.md` for the full state.
 
 ## Approach in one paragraph
 

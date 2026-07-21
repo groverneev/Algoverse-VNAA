@@ -4,8 +4,7 @@ This file is the detailed context for any agent picking up this project. Keep it
 updated as work progresses (see "Maintaining this file" at the bottom). The
 README is the short human-facing version; this is the long one.
 
-Last updated: July 2026. Slice 1 validated on Llama-3.2-1B; 8B run prepared for
-Kaggle (multi-GPU), not yet done.
+Last updated: July 2026. Slice 1 done: replicated on Llama-3.1-8B (Kaggle, 2x T4).
 
 GPU host decision: tried Lightning AI first, abandoned it — the site 404'd on the
 Studio dashboard and the account showed 0.00 free credits (a `.org` school email,
@@ -184,24 +183,31 @@ train / 120 test:**
   tokens). The probe's 0.99 is NOT a length artifact — probe strength 0.49 vs
   length strength ~0.13.
 
-Honest scope: this is the 1B, not the 8B replication. Length is only one
-baseline; format (MCQ structure) and lexical (bag-of-words) confounds are not
-ruled out yet. So this is "pipeline validated, replication shape reproduced, not
-a length artifact" — NOT yet "genuine eval-awareness."
+**Slice 1 on Llama-3.1-8B (Kaggle, 2x T4 sharded, bf16), 200 eval / 200 deploy,
+same stratified 280/120 split:**
+- Layer 0 (embeddings): AUROC 0.500.
+- Layers 1–3: 0.71 → 0.97 → 0.99. Best layer 4 of 32, AUROC 0.994.
+- Layers 5–32: 0.97–0.99, high and stable.
+- This is the headline replication: early-layer peak on the target model, a more
+  meaningful "early-to-middle" claim on 32 layers than on the 1B's 16.
+- Length baseline is model-independent (same prompts/split): token-length AUROC
+  0.37. The probe clears it by the same wide margin on the 8B.
+
+Honest scope: this replicates the prior single-turn obvious-eval result on the
+target model and rules out length. It is NOT yet "genuine eval-awareness" —
+format (MCQ structure) and lexical (bag-of-words) confounds are not ruled out;
+that is the surface-baseline hierarchy, then the disguised/multi-turn arms.
 
 ## What's next
 
-1. **Run slice 1 on Llama-3.1-8B** (bf16) on a free 24 GB GPU. This is the
-   headline replication number. 8B has 32 layers, so "early-to-middle" is a more
-   meaningful claim there. Chosen host: Lightning AI single L4 (24 GB) — one card
-   fits 8B bf16, so our single-device code runs unchanged; Kaggle's 2×T4 would
-   force multi-GPU sharding. Setup is scripted: `scripts/setup_gpu.sh` (clone the
-   public repo on a Studio, run it, switch to the L4, run `vnaa.run_slice1`).
-   `setup_gpu.sh` installs on top of the Studio's CUDA torch (never reinstalls
-   torch). PyYAML is now an explicit dep (data.py needs it; was transitive).
+1. **[DONE] Run slice 1 on Llama-3.1-8B** — replicated on Kaggle (2x T4). See
+   Results. Instructions live in `scripts/kaggle_slice1.md`.
 2. Add the rest of the surface-baseline hierarchy: formatting classifier,
    bag-of-words, style-matched control (random and length already understood).
-   The probe-minus-baseline gap is the actual result.
+   The probe-minus-baseline gap is the actual result. NOTE: length is model-
+   independent, but the format/bag-of-words classifiers are fit on the prompts
+   and can be computed from the cached activations' labels + the SAD bodies in
+   memory (never write bodies out — canary rule).
 3. Then begin the expansion arms in order (format-matched, then multi-turn).
 
 ## Gotchas / hard-won notes
