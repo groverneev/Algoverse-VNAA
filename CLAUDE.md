@@ -193,10 +193,29 @@ same stratified 280/120 split:**
 - Length baseline is model-independent (same prompts/split): token-length AUROC
   0.37. The probe clears it by the same wide margin on the 8B.
 
-Honest scope: this replicates the prior single-turn obvious-eval result on the
-target model and rules out length. It is NOT yet "genuine eval-awareness" —
-format (MCQ structure) and lexical (bag-of-words) confounds are not ruled out;
-that is the surface-baseline hierarchy, then the disguised/multi-turn arms.
+**Surface baselines on the same 120-prompt held-out split (`baselines.py`):**
+
+| reads | AUROC | strength |
+|---|---|---|
+| activations (probe, 8B) | 0.9944 | 0.494 |
+| bag-of-words (word counts only) | 0.9517 | 0.452 |
+| char length | 0.3929 | 0.107 |
+| word-count length | 0.4506 | 0.049 |
+
+**This is the key result so far, and it is a negative one.** A logistic
+regression on word counts alone — no model, no activations — reaches 0.95. The
+probe's margin over it is only +0.043 in strength, which with 120 test prompts
+(60/60) is within sampling noise. We should NOT claim the probe reliably beats
+bag-of-words on this data.
+
+Honest scope after baselines: the pipeline is correct and the replication
+reproduced, but **the obvious-eval cell cannot distinguish "the model internally
+recognizes evaluation" from "the prompts use different vocabulary."** SAD-eval
+and WildChat-deploy are lexically far apart, so surface and eval-ness are
+confounded. This is Devbunova's critique, demonstrated empirically on our own
+data, and it is the empirical justification for the format-matched arm: we need
+pairs where surface classifiers are forced to ~0.5 by construction, so that
+whatever the probe still finds cannot be lexical.
 
 ## What's next
 

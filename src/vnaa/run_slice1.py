@@ -24,8 +24,8 @@ import json
 from pathlib import Path
 
 import numpy as np
-from sklearn.model_selection import train_test_split
 
+from vnaa.baselines import make_split
 from vnaa.data import load_stages_oversight
 from vnaa.extract import extract_activations, load_model
 from vnaa.probe import fit_score
@@ -64,11 +64,10 @@ def main() -> None:
     acts = extract_activations(lm, data.conversations)  # (n, n_layers+1, hidden)
     assert np.isfinite(acts).all(), "non-finite activations"
 
-    # Stratified split so both classes appear in train and test.
-    idx = np.arange(len(labels))
-    tr, te = train_test_split(
-        idx, test_size=args.test_frac, random_state=args.seed, stratify=labels
-    )
+    # Stratified split so both classes appear in train and test. Shared with
+    # baselines.py so the probe and the surface baselines are scored on exactly
+    # the same held-out prompts.
+    tr, te = make_split(labels, args.test_frac, args.seed)
     report = fit_score(acts[tr], labels[tr], acts[te], labels[te])
 
     print(f"\ntrain n={len(tr)}  test n={len(te)}")
