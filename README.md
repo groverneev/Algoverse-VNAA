@@ -16,11 +16,14 @@ Slice 1 (the replication cell) is done, including surface baselines. On
 Llama-3.1-8B the eval-vs-deployment probe reaches AUROC 0.994 at layer 4 of 32,
 reproducing the prior single-turn result, and length is ruled out (0.37–0.45).
 
-But a bag-of-words classifier on word counts alone reaches 0.95 on the same
-held-out split — so the probe's margin over pure vocabulary is negligible. The
-obvious-eval cell cannot separate "the model recognizes evaluation" from "these
-prompts use different words." That is the empirical case for the format-matched
-arm, which is next. See `CLAUDE.md` for details.
+But the surface baselines nearly match it. A classifier reading only structure —
+option markers, digits, punctuation, no words at all — reaches 0.9675, and
+bag-of-words reaches 0.9517, on the same held-out split. The probe's margin over
+the best surface baseline is +0.027 in strength, within noise at n=120.
+
+So the obvious-eval cell is confounded: it cannot separate "the model recognizes
+evaluation" from "these prompts are shaped like tests." That is the empirical
+case for the format-matched arm, which is next. See `CLAUDE.md` for details.
 
 ## Approach in one paragraph
 

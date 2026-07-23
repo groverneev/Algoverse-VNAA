@@ -198,24 +198,33 @@ same stratified 280/120 split:**
 | reads | AUROC | strength |
 |---|---|---|
 | activations (probe, 8B) | 0.9944 | 0.494 |
+| format / structure only (no words) | 0.9675 | 0.468 |
 | bag-of-words (word counts only) | 0.9517 | 0.452 |
 | char length | 0.3929 | 0.107 |
 | word-count length | 0.4506 | 0.049 |
 
-**This is the key result so far, and it is a negative one.** A logistic
-regression on word counts alone — no model, no activations — reaches 0.95. The
-probe's margin over it is only +0.043 in strength, which with 120 test prompts
-(60/60) is within sampling noise. We should NOT claim the probe reliably beats
-bag-of-words on this data.
+**This is the key result so far, and it is a negative one.** A classifier that
+reads no words at all — only `A)`/`(B)` option markers, digit density, colons,
+newlines, punctuation ratios — reaches 0.9675. Bag-of-words on word counts
+reaches 0.9517. The probe's margin over the best surface baseline is only
+**+0.027 in strength**, which at n=120 (60/60) is within sampling noise. We must
+NOT claim the probe reliably beats surface features on this data.
+
+Internal check: length alone is near chance (strength 0.05–0.11), so the format
+classifier's 0.97 is not length leaking in — it is genuinely the
+benchmark-canonical MCQ shape.
 
 Honest scope after baselines: the pipeline is correct and the replication
-reproduced, but **the obvious-eval cell cannot distinguish "the model internally
-recognizes evaluation" from "the prompts use different vocabulary."** SAD-eval
-and WildChat-deploy are lexically far apart, so surface and eval-ness are
-confounded. This is Devbunova's critique, demonstrated empirically on our own
-data, and it is the empirical justification for the format-matched arm: we need
-pairs where surface classifiers are forced to ~0.5 by construction, so that
-whatever the probe still finds cannot be lexical.
+reproduced, but **the obvious-eval cell is fully confounded.** SAD-eval prompts
+look and read like benchmark items; WildChat-deploy prompts do not. Surface
+structure and eval-ness are perfectly entangled, so this cell cannot distinguish
+"the model internally recognizes evaluation" from "these prompts are shaped like
+tests." This does not show the model lacks eval-awareness, and does not make the
+probe wrong — it shows this dataset cannot answer the question. It is
+Devbunova's critique measured directly on our own data, and it is the empirical
+mandate for the format-matched arm: we need pairs where surface classifiers are
+forced to ~0.5 by construction, so whatever the probe still finds cannot be
+surface.
 
 ## What's next
 

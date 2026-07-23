@@ -18,11 +18,15 @@ Canary discipline: prompt text is read in memory and never written out.
 
 from __future__ import annotations
 
+import re
+
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 
 
 def make_split(labels: np.ndarray, test_frac: float = 0.3, seed: int = 0):
@@ -76,6 +80,54 @@ def bag_of_words_auroc(
     return roc_auc_score(labels[test_idx], scores)
 
 
+_OPTION_MARKER = re.compile(r"(?m)(^\s*\(?[A-Da-d][\)\.]\s)|(\([A-D]\))")
+
+
+def format_features(text: str) -> list[float]:
+    """Structural / typographic features only — no content words.
+
+    Raw length is deliberately excluded so this measures what *shape* adds beyond
+    the length baseline. A benchmark item looks like a benchmark item: option
+    markers, digits, colons, line structure.
+    """
+    n = max(len(text), 1)
+    lines = text.split("\n")
+    words = text.split()
+    n_alpha = sum(c.isalpha() for c in text)
+    return [
+        len(lines),                                        # line count
+        sum(c == "\n" for c in text) / n,                  # newline density
+        sum(c.isdigit() for c in text) / n,                # digit density
+        sum(not c.isalnum() and not c.isspace() for c in text) / n,  # punct density
+        sum(c.isupper() for c in text) / max(n_alpha, 1),  # uppercase ratio
+        np.mean([len(w) for w in words]) if words else 0.0,  # mean word length
+        len(_OPTION_MARKER.findall(text)),                 # "A)" / "(B)" markers
+        text.count("?") / n,
+        text.count(":") / n,
+        text.count("(") / n,
+        float(text.rstrip().endswith("?")),
+        sum(c.isspace() for c in text) / n,                # whitespace ratio
+        float(np.mean([len(l) for l in lines])) if lines else 0.0,  # mean line len
+    ]
+
+
+def format_auroc(
+    texts: list[str],
+    labels: np.ndarray,
+    train_idx,
+    test_idx,
+    seed: int = 0,
+) -> float:
+    """Logistic regression on structural features only, fit on train."""
+    x = np.array([format_features(t) for t in texts], dtype=float)
+    clf = make_pipeline(
+        StandardScaler(), LogisticRegression(max_iter=2000, random_state=seed)
+    )
+    clf.fit(x[train_idx], labels[train_idx])
+    scores = clf.predict_proba(x[test_idx])[:, 1]
+    return roc_auc_score(labels[test_idx], scores)
+
+
 def main() -> None:
     import argparse
 
@@ -98,6 +150,8 @@ def main() -> None:
     rows: list[tuple[str, float]] = []
     for name, val in length_auroc(texts, labels, test_idx).items():
         rows.append((f"length ({name.split('_')[0]})", val))
+    rows.append(("format (structure)", format_auroc(
+        texts, labels, train_idx, test_idx, seed=args.seed)))
     rows.append(("bag-of-words", bag_of_words_auroc(
         texts, labels, train_idx, test_idx, seed=args.seed)))
 
